@@ -1,0 +1,42 @@
+    Am folosit 2 structuri pentru a retine file urile: FileInfoTracker,
+ce contine informatiile necesare trackerului, anume numele fisierului,
+cate segmente are, un vector care arata cati clienti detin acel segment
+si o matrice unde elementul i j reprezinta clientul j al segmentului i,
+si FileOwn, unde sunt informatiile necesare clientului, anume numele file ului,
+cate segmente are si un vector care stocheaza hash urile (vector de stringuri). Fiecare peer are 2 
+FileOwn uri, unul in care sunt file urile detinute si care e actualizat la fiecare
+10 segemnte descarcate si unul in care se stocheaza file urile care trebuie downloadate,
+in care se primesc hasurile.
+    = Main =
+    In main se aloca spatiu pt files_own si files_to_download.
+    = Peer =
+    In peer se citeste din fisier, se initializeaza files_own si se trimite file ul
+la tracker. Dupa ce primeste recv de la tracker(care trimite dupa ce a primit toate
+informatiile de la fiecare client), se citesc file urile de downloadat si se initializeaza
+files_to_download. In download_remaining se stocheaa nr seg la care a ramas, si se
+initilaizeaza cu 0
+    = Tracker =
+    Intai primeste de la clienti toate informatile despre file urilor detinute de ei.
+Daca file ul nu este inca in swarm, se adauga, daca este, se adauga un nou client la acel file.
+Dupa ce a primit informatiile de la toti clientii, trimite un mesaj de anuntare ca poate incepe
+procesul de download.
+    Cat timp clientii mai au de downloadat, trackerul primeste un filename. Daca primeste un stop,
+inseamna ca acel client a terminat de downloadat si se contorizeaza. Daca primeste mesaj de "start", 
+inseamna ca trackerul primeste o actualizare a swarm ului, caci un client a download segmente. Altfel, 
+inseamna ca a fost o cerere pentru un file, si se trimite peerului pe care a venit mesajul informatiile
+pe care le detine pe acel file. Dupa ce au terminat toti clientii, se trimite stop pe toti clientii,
+pe care il va primi pe upload ca sa inchida threadul.
+    = Download =
+    In download, pentru fiecare file de downloadat, trimite trackerului numele fisierului, se 
+primesc detaliile despre file de la tracker, iar apoi incepe downloadarea segmentelor: la fiecare 10
+segmente(sau restul de seg < 10) se alege un nr random dintre 0, nr de clienti al seg -1. Astfel e eficienta,
+incat la fiecare 10 seg se alege random un peer diferit de la care sa downloadeze. Trimite la
+acel peer numele file ului dorit, cate segmente vrea si pe care. Cand sunt primite, daca nu e primul
+segment pentru file ul resp, deci el exista in files_own actualizeaza segmentele de acolo, iar daca nu,
+se adauga in files_own. Dupa, trimite mesaj si informatii catre tracker, ca acesta sa stie ca a devenit
+owner pe segmentele primite. Se actualizeaza download_remaining. Dupa ce a terminat de descarcat file ul
+scriu in fisier segmentele.
+    = Upload =
+    In upload, se primeste numele file ului, daca este mesajul stop, inseamna ca toti clientii au terminat
+de descarcat, si va trebui sa se opreasca threadul de upload. Daca nu, cauta numlee file ului in files_own al
+clientului, primeste nr seg dorit si trimite hashul acestuia.
